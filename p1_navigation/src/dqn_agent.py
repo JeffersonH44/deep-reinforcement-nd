@@ -88,8 +88,6 @@ class Agent():
         """
         states, actions, rewards, next_states, dones = experiences
 
-        ## TODO: compute and minimize the loss
-        "*** YOUR CODE HERE ***"
         # to get it in the same shape as rewards and dones
         Q_targets_next_s = self.qnetwork_target(next_states).detach().max(1).values.unsqueeze(1)
         Q_targets = rewards + (gamma * Q_targets_next_s * (1 - dones))
