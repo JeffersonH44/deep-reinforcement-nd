@@ -4,7 +4,7 @@ from collections import namedtuple, deque
 
 from torch._C import Value
 
-from model import QNetwork
+from src.model import QNetwork
 
 import torch
 import torch.nn.functional as F
