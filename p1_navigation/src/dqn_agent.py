@@ -3,8 +3,7 @@ import random
 from collections import namedtuple, deque
 
 from torch._C import Value
-
-from src.model import QNetwork
+from src.models import QNetwork
 
 import torch
 import torch.nn.functional as F
@@ -22,7 +21,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 class Agent():
     """Interacts with and learns from the environment."""
 
-    def __init__(self, state_size, action_size, seed):
+    def __init__(self, state_size, action_size, seed, network_kind=QNetwork):
         """Initialize an Agent object.
         
         Params
@@ -36,8 +35,8 @@ class Agent():
         self.seed = random.seed(seed)
 
         # Q-Network
-        self.qnetwork_local = QNetwork(state_size, action_size, seed).to(device)
-        self.qnetwork_target = QNetwork(state_size, action_size, seed).to(device)
+        self.qnetwork_local = network_kind(state_size, action_size, seed).to(device)
+        self.qnetwork_target = network_kind(state_size, action_size, seed).to(device)
         self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=LR)
 
         # Replay memory
@@ -65,12 +64,11 @@ class Agent():
             state (array_like): current state
             eps (float): epsilon, for epsilon-greedy action selection
         """
-        # TODO: why qnetwork_local instead of target
         state = torch.from_numpy(state).float().unsqueeze(0).to(device)
-        self.qnetwork_target.eval()
+        self.qnetwork_local.eval()
         with torch.no_grad():
-            action_values = self.qnetwork_target(state)
-        self.qnetwork_target.train()
+            action_values = self.qnetwork_local(state)
+        self.qnetwork_local.train()
 
         # Epsilon-greedy action selection
         if random.random() > eps:
