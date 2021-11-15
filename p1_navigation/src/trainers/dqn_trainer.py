@@ -1,30 +1,26 @@
 import numpy as np
 import torch
+import matplotlib.pyplot as plt
 
-from src.dqn_agent import Agent
+from src.agents import DQNAgent
+from src.utils import get_seed
+
 from collections import deque
 from tqdm import trange
-from src.models import DuelingQNetwork
-import matplotlib.pyplot as plt
+from hydra import compose, initialize
+
 
 class DQNTrainer():
     def __init__(
         self,
         env,
-        n_episodes=2000, 
-        max_t=1000, 
-        eps_start=1.0, 
-        eps_end=0.01, 
-        eps_decay=0.995,
-        seed=0
     ) -> None:
+
+        with initialize(config_path="conf"):
+            self.cfg = compose(config_name="trainer")
+
         self.env = env
-        self.n_episodes = n_episodes
-        self.max_t = max_t
-        self.eps_start = eps_start
-        self.eps_end = eps_end
-        self.eps_decay = eps_decay
-        self.seed = seed
+        self.seed = get_seed()
 
         self.create_agent()
 
@@ -37,20 +33,18 @@ class DQNTrainer():
         action_size = brain.vector_action_space_size
         state_size = len(env_info.vector_observations[0])
 
-        self.agent = Agent(
+        self.agent = DQNAgent(
             state_size=state_size, 
-            action_size=action_size, 
-            seed=self.seed,
-            network_kind=DuelingQNetwork
+            action_size=action_size,
         )
 
     def train(self):
-        self.scores = []                        # list containing scores from each episode
+        self.scores = []                   # list containing scores from each episode
         scores_window = deque(maxlen=100)  # last 100 scores
-        eps = self.eps_start               # initialize epsilon
+        eps = self.cfg.eps_start               # initialize epsilon
         env = self.env
         agent = self.agent
-        t_bar = trange(self.n_episodes)
+        t_bar = trange(self.cfg.n_episodes)
         for i_episode in t_bar:
             env_info = env.reset(train_mode=True)[self.brain_name]
             state = env_info.vector_observations[0]
@@ -63,7 +57,7 @@ class DQNTrainer():
                     break
             scores_window.append(score)
             self.scores.append(score)
-            eps = max(self.eps_end, self.eps_decay*eps)
+            eps = max(self.cfg.eps_end, self.cfg.eps_decay*eps)
             scores_mean = np.mean(scores_window)
             if i_episode % 100 == 0:
                 t_bar.set_description(f"Average Score: {scores_mean}")
