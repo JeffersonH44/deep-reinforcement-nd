@@ -1,6 +1,5 @@
-from hydra import compose, initialize
+from hydra import compose
 
 def get_seed() -> int:
-    with initialize(config_path="conf"):
-        return compose(config_name="config").seed
+    return compose(config_name="config").seed
 

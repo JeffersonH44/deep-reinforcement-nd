@@ -104,3 +104,4 @@ ENV/
 .mypy_cache/
 
 p1_navigation/Banana_Linux
+p1_navigation/weights/

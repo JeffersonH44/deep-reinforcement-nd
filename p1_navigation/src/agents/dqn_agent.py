@@ -26,9 +26,8 @@ class DQNAgent():
             seed (int): random seed
         """
 
-        with initialize(config_path="conf"):
-            self.cfg = compose(config_name="agent")
-            self.cfg_model = compose(config_name="model")
+        self.cfg = compose(config_name="agent")
+        self.cfg_model = compose(config_name="model")
 
         self.state_size = state_size
         self.action_size = action_size
@@ -37,10 +36,10 @@ class DQNAgent():
         self.seed = random.seed(seed)
 
         # Q-Network
-        network_kind = ModelFactory[self.cfg.network_kind]
-        self.qnetwork_local = network_kind(state_size, action_size, seed).to(device)
-        self.qnetwork_target = network_kind(state_size, action_size, seed).to(device)
-        self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=self.cfg.lr)
+        network_kind = ModelFactory[self.cfg.network_kind].value
+        self.qnetwork_local = network_kind(state_size, action_size).to(device)
+        self.qnetwork_target = network_kind(state_size, action_size).to(device)
+        self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=self.cfg_model.lr)
 
         # Replay memory
         self.memory = ReplayBuffer(action_size)

@@ -7,7 +7,7 @@ from src.utils import get_seed
 
 from collections import deque
 from tqdm import trange
-from hydra import compose, initialize
+from hydra import compose
 
 
 class DQNTrainer():
@@ -15,9 +15,7 @@ class DQNTrainer():
         self,
         env,
     ) -> None:
-
-        with initialize(config_path="conf"):
-            self.cfg = compose(config_name="trainer")
+        self.cfg = compose(config_name="trainer")
 
         self.env = env
         self.seed = get_seed()
@@ -49,7 +47,7 @@ class DQNTrainer():
             env_info = env.reset(train_mode=True)[self.brain_name]
             state = env_info.vector_observations[0]
             score = 0
-            for _ in range(self.max_t):
+            for _ in range(self.cfg.max_t):
                 next_state, reward, done = self.train_step(agent, env, state, eps)
                 state = next_state
                 score += reward
@@ -65,7 +63,7 @@ class DQNTrainer():
                 torch.save(agent.qnetwork_local.state_dict(), f"weights/checpoint_{i_episode}.pth")
             if scores_mean >= 13.0:
                 t_bar.set_description(f"Problem solved with Score: {scores_mean}")
-                torch.save(agent.qnetwork_local.state_dict(), f"weights/checkpoint_final.pth")
+                torch.save(agent.qnetwork_local.state_dict(), f"final_weights/checkpoint_final.pth")
                 break
             
             

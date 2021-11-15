@@ -2,10 +2,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from src.utils import get_seed
+
 class DuelingQNetwork(nn.Module):
-    def __init__(self, state_size, action_size, seed):
+    def __init__(self, state_size, action_size):
         super().__init__()
-        self.seed = torch.manual_seed(seed)
+        self.seed = torch.manual_seed(get_seed())
 
         self.V_fc1 = nn.Linear(state_size, 64)
         self.V_fc2 = nn.Linear(64, 64)

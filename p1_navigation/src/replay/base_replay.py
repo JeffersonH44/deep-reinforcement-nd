@@ -3,7 +3,7 @@ import random
 import torch
 
 from collections import namedtuple, deque
-from hydra import compose, initialize
+from hydra import compose
 from src.utils import get_seed
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -21,9 +21,8 @@ class ReplayBuffer:
             batch_size (int): size of each training batch
             seed (int): random seed
         """
-        with initialize(config_path="conf"):
-            cfg_replay = compose(config_name="replay")
-            cfg_model = compose(config_name="model")
+        cfg_replay = compose(config_name="replay")
+        cfg_model = compose(config_name="model")
 
         buffer_size = cfg_replay.buffer_size
         batch_size = cfg_model.batch_size
