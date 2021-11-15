@@ -1,4 +1,5 @@
-tau: 0.001             # for soft update of target parameters
-update_every: 4        # how often to update the network
+tau: 0.001                     # for soft update of target parameters
+update_every: 4                # how often to update the network
 network_kind: dueling_qnetwork # kind of network to train (qnetwork or dueling_qnetwork)
-gamma: 0.99            # discount factor
+loss_kind: ddqn                # kind of loss to calculate (dqn or ddqn)
+gamma: 0.99                    # discount factor

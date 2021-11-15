@@ -4,6 +4,7 @@ import random
 from src.models import ModelFactory
 from src.utils import get_seed
 from hydra import compose, initialize
+from enum import Enum
 
 import torch
 import torch.nn.functional as F
@@ -13,8 +14,11 @@ from src.replay import ReplayBuffer
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+
+
 class DQNAgent():
     """Interacts with and learns from the environment."""
+
 
     def __init__(self, state_size, action_size):
         """Initialize an Agent object.
@@ -45,6 +49,13 @@ class DQNAgent():
         self.memory = ReplayBuffer(action_size)
         # Initialize time step (for updating every UPDATE_EVERY steps)
         self.t_step = 0
+
+        # define loss kind
+        LOSS_KIND = {
+            "ddqn": self.ddqn_loss,
+            "dqn": self.dqn_loss
+        }
+        self.loss_calculator = LOSS_KIND[self.cfg.loss_kind]
     
     def step(self, state, action, reward, next_state, done):
         # Save experience in replay memory
@@ -88,12 +99,7 @@ class DQNAgent():
         """
         states, actions, rewards, next_states, dones = experiences
 
-        # to get it in the same shape as rewards and dones
-        Q_targets_next_s = self.qnetwork_target(next_states).detach().max(1).values.unsqueeze(1)
-        Q_targets = rewards + (gamma * Q_targets_next_s * (1 - dones))
-        Q_expected = self.qnetwork_local(states).gather(1, actions)
-
-        loss = F.mse_loss(Q_expected, Q_targets)
+        loss = self.loss_calculator(states, actions, rewards, next_states, dones, gamma)
 
         self.optimizer.zero_grad()
         loss.backward()
@@ -101,6 +107,23 @@ class DQNAgent():
 
         # ------------------- update target network ------------------- #
         self.soft_update(self.qnetwork_local, self.qnetwork_target, self.cfg.tau)
+    
+    def dqn_loss(self, states, actions, rewards, next_states, dones, gamma):
+        Q_targets_next_s = self.qnetwork_target(next_states).detach().max(1).values.unsqueeze(1)
+        Q_targets = rewards + (gamma * Q_targets_next_s * (1 - dones))
+        Q_expected = self.qnetwork_local(states).gather(1, actions)
+
+        return F.mse_loss(Q_expected, Q_targets)
+
+    def ddqn_loss(self, states, actions, rewards, next_states, dones, gamma):
+        Q_targets_next_s = self.qnetwork_target(next_states).gather(1, 
+            self.qnetwork_local(next_states).argmax(dim=1, keepdim=True)
+        )
+        Q_targets = rewards + (gamma * Q_targets_next_s * (1 - dones))
+        Q_expected = self.qnetwork_local(states).gather(1, actions)
+
+        return F.mse_loss(Q_expected, Q_targets)
+
 
     def soft_update(self, local_model, target_model, tau):
         """Soft update model parameters.
