@@ -1,1 +1,1 @@
-from .base_replay import ReplayBuffer
+from .factory import ReplayFactory

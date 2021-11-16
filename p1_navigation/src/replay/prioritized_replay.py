@@ -13,9 +13,9 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         super().__init__(action_size)
 
         self.max_error = 1.0 # this is handpicked, should be update when new losses are calculated and updated
-        self.alpha = 0.6 # as described in the paper
-        self.beta = 0.4 # as described in the paper
-        self.eps = 1e-5
+        self.alpha = self.cfg_replay.alpha # as described in the paper
+        self.beta = self.cfg_replay.beta # as described in the paper
+        self.eps = self.cfg_replay.epsilon
         self.losses = deque(self.buffer_size)
 
     def add(self, state, action, reward, next_state, done):
@@ -42,7 +42,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         rewards = torch.from_numpy(np.vstack([e.reward for e in experiences if e is not None])).float().to(device)
         next_states = torch.from_numpy(np.vstack([e.next_state for e in experiences if e is not None])).float().to(device)
         dones = torch.from_numpy(np.vstack([e.done for e in experiences if e is not None]).astype(np.uint8)).float().to(device)
-        weights = self.__calculate_weights(indices)
+        weights = torch.from_numpy(np.hstack(self.__calculate_weights(indices))).float().to(device)
   
         return (states, actions, rewards, next_states, dones, indices, weights)
 

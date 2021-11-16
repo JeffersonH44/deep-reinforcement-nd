@@ -21,10 +21,10 @@ class ReplayBuffer:
             batch_size (int): size of each training batch
             seed (int): random seed
         """
-        cfg_replay = compose(config_name="replay")
+        self.cfg_replay = compose(config_name="replay")
         cfg_model = compose(config_name="model")
 
-        buffer_size = cfg_replay.buffer_size
+        buffer_size = self.cfg_replay.buffer_size
         batch_size = cfg_model.batch_size
         seed = get_seed()
 

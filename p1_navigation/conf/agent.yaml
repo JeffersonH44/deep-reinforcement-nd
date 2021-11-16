@@ -2,4 +2,5 @@ tau: 0.001                     # for soft update of target parameters
 update_every: 4                # how often to update the network
 network_kind: dueling_qnetwork # kind of network to train (qnetwork or dueling_qnetwork)
 loss_kind: ddqn                # kind of loss to calculate (dqn or ddqn)
+replay_kind: prioritized       # kind of replay to use (prioritized or uniform)
 gamma: 0.99                    # discount factor
