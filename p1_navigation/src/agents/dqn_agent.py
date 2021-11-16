@@ -133,15 +133,12 @@ class DQNAgent():
         indices = kwargs['indices']
         weights = kwargs['weights']
 
-        elementwise_loss = F.smooth_l1_loss(Q_expected, Q_targets, reduction="none")
+        elementwise_loss = F.mse_loss(Q_expected, Q_targets, reduction="none")
 
-        loss_for_per = elementwise_loss.detach().cpu().tolist()
+        loss_for_per = elementwise_loss.detach().cpu().flatten().tolist()
         self.memory.update_priorities(indices, loss_for_per)
 
         return torch.mean(weights * elementwise_loss)
-
-
-
 
     def __dqn_q_next_state(self, next_states):
         return self.qnetwork_target(next_states).detach().max(1).values.unsqueeze(1)
@@ -150,7 +147,6 @@ class DQNAgent():
         return self.qnetwork_target(next_states).gather(1, 
             self.qnetwork_local(next_states).argmax(dim=1, keepdim=True)
         )
-
 
     def soft_update(self, local_model, target_model, tau):
         """Soft update model parameters.

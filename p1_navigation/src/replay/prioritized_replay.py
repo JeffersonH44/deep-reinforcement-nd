@@ -1,10 +1,9 @@
-import random
 import torch
 import numpy as np
 
 from collections import deque
 from .base_replay import ReplayBuffer
-from src.utils import get_device
+from src.utils import get_device, loop_choice
 
 device = get_device()
 
@@ -16,7 +15,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         self.alpha = self.cfg_replay.alpha # as described in the paper
         self.beta = self.cfg_replay.beta # as described in the paper
         self.eps = self.cfg_replay.epsilon
-        self.losses = deque(self.buffer_size)
+        self.losses = deque(maxlen=self.buffer_size)
 
     def add(self, state, action, reward, next_state, done):
         super().add(state, action, reward, next_state, done)
@@ -35,7 +34,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
     def sample(self):
         """Randomly sample a batch of experiences from memory."""
         experiences_with_indices = self.__get_samples()
-        experiences, indices = zip(*experiences_with_indices)
+        indices, experiences = zip(*experiences_with_indices)
 
         states = torch.from_numpy(np.vstack([e.state for e in experiences if e is not None])).float().to(device)
         actions = torch.from_numpy(np.vstack([e.action for e in experiences if e is not None])).long().to(device)
@@ -47,14 +46,22 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         return (states, actions, rewards, next_states, dones, indices, weights)
 
     def __get_samples(self):
-        return random.choices(
+        indices = loop_choice(
+            np.arange(len(self.memory)),
+            self.losses,
+            self.batch_size
+        )
+
+        return [(idx, self.memory[idx]) for idx in indices]
+
+        """return random.choices(
             population=list(enumerate(self.memory)),
             k=self.batch_size,
             weights=self.losses
-        )
+        )"""
 
     def __calculate_weights(self, indices):
-        p_max = max(self.losses)
+        p_max = min(self.losses)
         max_weight = (1/(len(self) * p_max)) ** self.beta
 
         p_samples = [self.losses[i] for i in indices]
