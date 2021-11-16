@@ -2,7 +2,7 @@ import numpy as np
 import random
 
 from src.models import ModelFactory
-from src.utils import get_seed
+from src.utils import get_seed, get_device
 from hydra import compose, initialize
 from enum import Enum
 
@@ -12,9 +12,7 @@ import torch.optim as optim
 
 from src.replay import ReplayBuffer
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-
+device = get_device()
 
 class DQNAgent():
     """Interacts with and learns from the environment."""

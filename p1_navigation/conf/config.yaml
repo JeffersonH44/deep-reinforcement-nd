@@ -1,1 +1,2 @@
 seed: 0                # seed for reproducibility
+train_device: cpu      # device for model training (cpu or gpu)

@@ -4,9 +4,9 @@ import torch
 
 from collections import namedtuple, deque
 from hydra import compose
-from src.utils import get_seed
+from src.utils import get_seed, get_device
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = get_device()
 
 class ReplayBuffer:
     """Fixed-size buffer to store experience tuples."""
@@ -30,9 +30,11 @@ class ReplayBuffer:
 
         self.action_size = action_size
         self.memory = deque(maxlen=buffer_size)  
-        self.batch_size = batch_size
         self.experience = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "done"])
         self.seed = random.seed(seed)
+
+        self.batch_size = batch_size
+        self.buffer_size = buffer_size
     
     def add(self, state, action, reward, next_state, done):
         """Add a new experience to memory."""
@@ -41,7 +43,7 @@ class ReplayBuffer:
     
     def sample(self):
         """Randomly sample a batch of experiences from memory."""
-        experiences = random.sample(self.memory, k=self.batch_size)
+        experiences = self.__get_samples()
 
         states = torch.from_numpy(np.vstack([e.state for e in experiences if e is not None])).float().to(device)
         actions = torch.from_numpy(np.vstack([e.action for e in experiences if e is not None])).long().to(device)
@@ -51,6 +53,9 @@ class ReplayBuffer:
   
         return (states, actions, rewards, next_states, dones)
 
+    def __get_samples(self):
+        return random.sample(self.memory, k=self.batch_size)
+    
     def __len__(self):
         """Return the current size of internal memory."""
         return len(self.memory)

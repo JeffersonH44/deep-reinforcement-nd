@@ -1,1 +1,1 @@
-from .utils import get_seed
+from .utils import get_seed, get_device
