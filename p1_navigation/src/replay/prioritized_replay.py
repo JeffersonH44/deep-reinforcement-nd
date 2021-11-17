@@ -1,9 +1,9 @@
 import torch
 import numpy as np
 
-from collections import deque
 from .base_replay import ReplayBuffer
-from src.utils import get_device, loop_choice
+from hydra import compose
+from src.utils import get_device, get_next_power_of_two, SumSegmentTree, MinSegmentTree
 
 device = get_device()
 
@@ -12,15 +12,26 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         super().__init__(action_size)
 
         self.max_error = 1.0 # this is handpicked, should be update when new losses are calculated and updated
+        self.max_error_updated = False
+
         self.alpha = self.cfg_replay.alpha # as described in the paper
         self.beta = self.cfg_replay.beta # as described in the paper
         self.eps = self.cfg_replay.epsilon
-        self.losses = deque(maxlen=self.buffer_size)
+
+        real_size = get_next_power_of_two(self.buffer_size)
+        self.losses = SumSegmentTree(real_size)#deque(maxlen=self.buffer_size)
+        self.min_losses = MinSegmentTree(real_size)
+
+        # variables for annealing beta
+        self.curr_episode = 1
+        self.total_episodes = compose(config_name="trainer").n_episodes
 
     def add(self, state, action, reward, next_state, done):
+        # we do the update before the constructor, otherwise the index would not be the same
+        loss = self.max_error ** self.alpha
+        self.losses[self.idx_pos] = loss
+        self.min_losses[self.idx_pos] = loss
         super().add(state, action, reward, next_state, done)
-
-        self.losses.append(self.max_error ** self.alpha)
     
     def update_priorities(self, indices, losses):
         for idx, loss in zip(indices, losses):
@@ -29,7 +40,11 @@ class PrioritizedReplayBuffer(ReplayBuffer):
             
             self.losses[idx] = (loss + self.eps) ** self.alpha
 
-            self.max_error = max(self.max_error, loss)
+            if self.max_error_updated:
+                self.max_error = max(self.max_error, loss)
+            else:
+                self.max_error = loss
+                self.max_error_updated = True
 
     def sample(self):
         """Randomly sample a batch of experiences from memory."""
@@ -45,27 +60,28 @@ class PrioritizedReplayBuffer(ReplayBuffer):
   
         return (states, actions, rewards, next_states, dones, indices, weights)
 
+    def update_beta(self, percentage_complete):
+        frac = min(percentage_complete, 1.0)
+        self.beta = self.beta + frac * (1.0 - self.beta)
+
     def __get_samples(self):
-        indices = loop_choice(
-            np.arange(len(self.memory)),
-            self.losses,
-            self.batch_size
-        )
+        total_sum = self.losses.sum()
+        step_size = total_sum / self.batch_size
+        intervals = np.arange(0, total_sum, step=step_size)
+        rand_values = np.random.uniform(0, step_size, size=self.batch_size)
+        chosen_elems = intervals + rand_values
+        indices = [self.losses.find_prefixsum_idx(elem) for elem in chosen_elems]
+        experiences = [(idx, self.memory[idx]) for idx in indices]
 
-        return [(idx, self.memory[idx]) for idx in indices]
-
-        """return random.choices(
-            population=list(enumerate(self.memory)),
-            k=self.batch_size,
-            weights=self.losses
-        )"""
+        return experiences
 
     def __calculate_weights(self, indices):
-        p_max = min(self.losses)
-        max_weight = (1/(len(self) * p_max)) ** self.beta
+        total_sum = self.losses.sum()
+        def calc_weight(loss):
+            p_val = loss / total_sum
+            return ((p_val * len(self)) ** -self.beta)
 
-        p_samples = [self.losses[i] for i in indices]
-        def calculate_weight(p_val):
-            return ((1/(len(self) * p_val)) ** self.beta) / max_weight
+        max_weight = calc_weight(self.min_losses.min())
+        weights = [calc_weight(self.losses[i]) / max_weight for i in indices]
 
-        return list(map(calculate_weight, p_samples))
+        return weights

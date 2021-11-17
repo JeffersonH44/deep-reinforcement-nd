@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 from src.agents import DQNAgent
 from src.utils import get_seed
+from src.replay import ReplayFactory
 
 from collections import deque
 from tqdm import trange
@@ -47,6 +48,11 @@ class DQNTrainer():
             env_info = env.reset(train_mode=True)[self.brain_name]
             state = env_info.vector_observations[0]
             score = 0
+
+            # update beta if is PrioritizedER
+            if self.agent.replay_model == ReplayFactory.prioritized:
+                self.agent.memory.update_beta(i_episode / self.cfg.n_episodes)
+
             for _ in range(self.cfg.max_t):
                 next_state, reward, done = self.train_step(agent, env, state, eps)
                 state = next_state
