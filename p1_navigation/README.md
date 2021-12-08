@@ -38,6 +38,83 @@ The task is episodic, and in order to solve the environment, your agent must get
 
 Follow the instructions in `Navigation.ipynb` to get started with training your own agent!  
 
+## Install instructions 
+
+Install pytorch from conda
+
+`conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch`
+
+then install the requierement file:
+
+`pip install requirements.txt`
+
+## How to run each environment?
+
+Basically you need to set each configuration for each algorithm, these configurations need to be changes into the `conf` folder,
+the structure of that folder is the folowing:
+
+* [`agent.yaml`](./conf/agent.yaml): for all the configurations of the Q-Learning agent (important one if you want to set dueling-dqn or double-dqn)
+* [`config.yaml`](./conf/config.yaml): to set the seed and the train device for pytorch (no modification needed here)
+* [`model.yaml`](./conf/model.yaml): hyperparameters for the DNN algorithm
+* [`replay.yaml`](./conf/replay.yaml): all the hyperparameters for the (prioritized) experience replay.
+* [`trainer.yaml`](./conf/trainer.yaml): hyperparameters for the trainer algorithm (episodes, actions per episode, epsilon, etc.)
+
+## how to run the environment with a pretrained model
+
+Go to the [`Navigation.ipynb`](./Navigation.ipynb), to the 4th section **It's your turn!**, run the two subsections **Set the environmnet for python** and **Import all dependencies**. Then, go to the 
+5th section **Test new agenn over the environment** and run the two cells below to run the pretrained agent.
+
+That configuration is the final config (Double-DQN and Dueling-DQN) running, if you want to run new configurations, then:
+
+#### **Base Q-Network**
+
+Enter to the [`agent.yaml`](./conf/agent.yaml) and set the variables as follows:
+
+* `network_kind`: `qnetwork`
+* `loss_kind`: `dqn`
+
+in the [`Navigation.ipynb`](./Navigation.ipynb) set the variable `weights_file` to `"./final_weights/checkpoint_all.pth"`, reset the notebook and run the cells as described before
+
+#### **Double DQN**
+
+Enter to the [`agent.yaml`](./conf/agent.yaml) and set the variables as follows:
+
+* `network_kind`: `qnetwork`
+* `loss_kind`: `ddqn`
+
+in the [`Navigation.ipynb`](./Navigation.ipynb) set the variable `weights_file` to `"./final_weights/checkpoint_ddqn.pth"`, reset the notebook and run the cells as described before.
+
+#### **Dueling DQN**
+
+Enter to the [`agent.yaml`](./conf/agent.yaml) and set the variables as follows:
+
+* `network_kind`: `dueling_qnetwork`
+* `loss_kind`: `dqn`
+
+in the [`Navigation.ipynb`](./Navigation.ipynb) set the variable `weights_file` to `"./final_weights/checkpoint_dueling.pth"`, reset the notebook and run the cells as described before.
+
+#### **Prioritized Experience Replay**
+
+Enter to the [`agent.yaml`](./conf/agent.yaml) and set the variables as follows:
+
+* `network_kind`: `qnetwork`
+* `loss_kind`: `dqn`
+
+then go to [`replay.yaml`](./conf/replay.yaml) and set `alpha` to `0.6`, (**NOTE** set it again to `0.0` when finished for other experiments)
+
+in the [`Navigation.ipynb`](./Navigation.ipynb) set the variable `weights_file` to `"./final_weights/checkpoint_per.pth"`, reset the notebook and run the cells as described before.
+
+#### **Dueling-DQN + Double-DQN**
+
+Enter to the [`agent.yaml`](./conf/agent.yaml) and set the variables as follows:
+
+* `network_kind`: `dueling_qnetwork`
+* `loss_kind`: `ddqn`
+
+in the [`Navigation.ipynb`](./Navigation.ipynb) set the variable `weights_file` to `"./final_weights/checkpoint_all.pth"`, reset the notebook and run the cells as described before.
+
+this is the environment set by default in the repository
+
 ### (Optional) Challenge: Learning from Pixels
 
 After you have successfully completed the project, if you're looking for an additional challenge, you have come to the right place!  In the project, your agent learned from information such as its velocity, along with ray-based perception of objects around its forward direction.  A more challenging task would be to learn directly from pixels!

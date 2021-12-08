@@ -1,5 +1,5 @@
 buffer_size: 1000000   # experience replay buffer size
 # parameters for Prioritized experience replay
-alpha: 0.0          
-beta: 0.4              
+alpha: 0.0   # priority factor for previous experiences          
+beta: 0.4    # importance factor for sampling weights over previous experiences          
 epsilon: 0.00000000001 # to avoid zero losses 
