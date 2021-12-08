@@ -59,7 +59,7 @@ the structure of that folder is the folowing:
 * [`replay.yaml`](./conf/replay.yaml): all the hyperparameters for the (prioritized) experience replay.
 * [`trainer.yaml`](./conf/trainer.yaml): hyperparameters for the trainer algorithm (episodes, actions per episode, epsilon, etc.)
 
-## how to run the environment with a pretrained model
+## how to run the environment with a pretrained model?
 
 Go to the [`Navigation.ipynb`](./Navigation.ipynb), to the 4th section **It's your turn!**, run the two subsections **Set the environmnet for python** and **Import all dependencies**. Then, go to the 
 5th section **Test new agenn over the environment** and run the two cells below to run the pretrained agent.
@@ -113,7 +113,12 @@ Enter to the [`agent.yaml`](./conf/agent.yaml) and set the variables as follows:
 
 in the [`Navigation.ipynb`](./Navigation.ipynb) set the variable `weights_file` to `"./final_weights/checkpoint_all.pth"`, reset the notebook and run the cells as described before.
 
-this is the environment set by default in the repository
+this is the environment set by default in the repository.
+
+## How to run the environment from scratch? 
+
+Run the cells of the all 4th section with the configuration that you may want, at the end it should generate a weights file `./final_weights/checkpoint_final.pth`,
+set the variable `weights_file` to that new path and run all the cells of the 5th section.
 
 ### (Optional) Challenge: Learning from Pixels
 
