@@ -40,13 +40,15 @@ Follow the instructions in `Navigation.ipynb` to get started with training your 
 
 ## Install instructions 
 
+Install the Unity environment at this folder, it should have a an executable `"Banana_Linux/Banana.x86_64"`
+
 Install pytorch from conda
 
 `conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch`
 
 then install the requierement file:
 
-`pip install requirements.txt`
+`pip install -r requirements.txt`
 
 ## How to run each environment?
 
